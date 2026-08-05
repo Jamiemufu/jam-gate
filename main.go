@@ -1,49 +1,41 @@
 package main
 
 import (
-	"jam-gate/internal/button"
-	"jam-gate/internal/led"
-	"jam-gate/internal/status"
+	"fmt"
+	hw "jam-gate/internal/hardware"
 	"log"
 	"time"
-
-	"periph.io/x/host/v3"
 )
 
 func main() {
-	if _, err := host.Init(); err != nil {
-		log.Fatal(err)
-	}
-
-	redLED, err := led.New("GPIO2")
+	devices, err := hw.Init()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	greenLED, err := led.New("GPIO3")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	button, err := button.New("GPIO4")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	statusLight := status.New(redLED, greenLED)
-
-	if err := statusLight.Waiting(); err != nil {
+	if err := devices.StatusLight.Waiting(); err != nil {
 		log.Fatal(err)
 	}
 
 	for {
-		if button.InactiveFor(10 * time.Second) {
-			if err := statusLight.Sleep(); err != nil {
+		// Read the key from the keypad
+		key, err := devices.Keypad.ReadKey()
+		if err != nil {
+			log.Fatal(err)
+		}
+		// Print the key if it is not empty
+		if key != "" {
+			fmt.Println(key)
+		}
+		// Check if the button has been inactive for 5 minutes
+		if devices.Button.InactiveFor(5 * time.Minute) {
+			if err := devices.StatusLight.Sleep(); err != nil {
 				log.Fatal(err)
 			}
 		}
-		if button.Pressed() {
-			if err := statusLight.Start(); err != nil {
+		// Check if the button has been pressed
+		if devices.Button.Pressed() {
+			if err := devices.StatusLight.Start(); err != nil {
 				log.Fatal(err)
 			}
 		}

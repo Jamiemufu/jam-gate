@@ -1,0 +1,64 @@
+package hardware
+
+import (
+	"jam-gate/internal/button"
+	"jam-gate/internal/keypad"
+	"jam-gate/internal/led"
+	"jam-gate/internal/status"
+
+	"periph.io/x/conn/v3/gpio"
+	"periph.io/x/conn/v3/gpio/gpioreg"
+	"periph.io/x/host/v3"
+)
+
+type Hardware struct {
+	Button      *button.Button
+	Keypad      *keypad.Keypad
+	StatusLight *status.Status
+}
+
+func Init() (*Hardware, error) {
+	if _, err := host.Init(); err != nil {
+		return nil, err
+	}
+
+	redLED, err := led.New("GPIO2")
+	if err != nil {
+		return nil, err
+	}
+
+	greenLED, err := led.New("GPIO3")
+	if err != nil {
+		return nil, err
+	}
+
+	btn, err := button.New("GPIO4")
+	if err != nil {
+		return nil, err
+	}
+
+	rows := [4]gpio.PinIO{
+		gpioreg.ByName("GPIO26"),
+		gpioreg.ByName("GPIO19"),
+		gpioreg.ByName("GPIO13"),
+		gpioreg.ByName("GPIO6"),
+	}
+
+	cols := [4]gpio.PinIO{
+		gpioreg.ByName("GPIO21"),
+		gpioreg.ByName("GPIO20"),
+		gpioreg.ByName("GPIO16"),
+		gpioreg.ByName("GPIO12"),
+	}
+
+	pad, err := keypad.New(rows, cols)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Hardware{
+		Button:      btn,
+		Keypad:      pad,
+		StatusLight: status.New(redLED, greenLED),
+	}, nil
+}
