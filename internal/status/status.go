@@ -99,3 +99,13 @@ func (s *Status) Error() error {
 	}
 	return nil
 }
+
+// KeyPress toggles the red LED on and off to indicate a key press event.
+func (s *Status) KeyPress() error {
+	if err := s.red.Toggle(); err != nil {
+		return err
+	}
+	time.Sleep(100 * time.Millisecond)
+	s.red.Toggle()
+	return nil
+}

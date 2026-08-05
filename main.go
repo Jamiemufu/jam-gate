@@ -26,6 +26,9 @@ func main() {
 		// Print the key if it is not empty
 		if key != "" {
 			fmt.Println(key)
+			if err := devices.StatusLight.KeyPress(); err != nil {
+				log.Fatal(err)
+			}
 		}
 		// Check if the button has been inactive for 5 minutes
 		if devices.Button.InactiveFor(5 * time.Minute) {
