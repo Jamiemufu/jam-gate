@@ -37,6 +37,11 @@ func main() {
 	}
 
 	for {
+		if button.InactiveFor(10 * time.Second) {
+			if err := statusLight.Sleep(); err != nil {
+				log.Fatal(err)
+			}
+		}
 		if button.Pressed() {
 			if err := statusLight.Start(); err != nil {
 				log.Fatal(err)

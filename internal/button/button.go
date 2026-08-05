@@ -2,15 +2,17 @@ package button
 
 import (
 	"fmt"
+	"time"
 
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/conn/v3/gpio/gpioreg"
 )
 
 type Button struct {
-	pin        gpio.PinIO
-	isPressed  bool
-	wasPressed bool
+	pin         gpio.PinIO
+	isPressed   bool
+	wasPressed  bool
+	lastPressed time.Time
 }
 
 func New(pinName string) (*Button, error) {
@@ -25,9 +27,10 @@ func New(pinName string) (*Button, error) {
 	}
 
 	return &Button{
-		pin:        pin,
-		isPressed:  false,
-		wasPressed: false,
+		pin:         pin,
+		isPressed:   false,
+		wasPressed:  false,
+		lastPressed: time.Now(),
 	}, nil
 }
 
@@ -36,5 +39,14 @@ func (b *Button) Pressed() bool {
 	b.wasPressed = b.isPressed
 	b.isPressed = b.pin.Read() == gpio.Low
 
+	if b.isPressed && !b.wasPressed {
+		b.lastPressed = time.Now()
+	}
+
 	return b.isPressed && !b.wasPressed
+}
+
+// InactiveFor returns true if the button has not been pressed for the specified duration.
+func (b *Button) InactiveFor(d time.Duration) bool {
+	return time.Since(b.lastPressed) >= d
 }

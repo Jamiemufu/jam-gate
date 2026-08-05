@@ -80,6 +80,17 @@ func (s *Status) Waiting() error {
 	return nil
 }
 
+// Sleep turns off both the red and green LEDs, indicating a sleep status.
+func (s *Status) Sleep() error {
+	if err := s.red.Off(); err != nil {
+		return err
+	}
+	if err := s.green.Off(); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Error continuously blinks the red LED to indicate an error status.
 func (s *Status) Error() error {
 	interval := 500 * time.Millisecond
