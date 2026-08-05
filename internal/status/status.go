@@ -105,7 +105,7 @@ func (s *Status) KeyPress() error {
 	if err := s.red.Toggle(); err != nil {
 		return err
 	}
-	time.Sleep(1 * time.Second)
+	time.Sleep(50 * time.Millisecond)
 	s.red.Toggle()
 	return nil
 }
