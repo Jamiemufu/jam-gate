@@ -25,9 +25,22 @@ func main() {
 		}
 		// Print the key if it is not empty
 		if key != "" {
-			fmt.Println(key)
-			if err := devices.StatusLight.KeyPress(); err != nil {
-				log.Fatal(err)
+			switch key {
+			case "A":
+				fmt.Println("Unlocking the gate")
+				if err := devices.StatusLight.Unlock(); err != nil {
+					log.Fatal(err)
+				}
+			case "D":
+				fmt.Println("Locking the gate")
+				if err := devices.StatusLight.Lock(); err != nil {
+					log.Fatal(err)
+				}
+			default:
+				if err := devices.StatusLight.KeyPress(); err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println(key)
 			}
 		}
 		// Check if the button has been inactive for 5 minutes

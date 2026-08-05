@@ -109,3 +109,29 @@ func (s *Status) KeyPress() error {
 	s.red.Toggle()
 	return nil
 }
+
+// Unlock turns off the red LED and blinks the green LED to indicate an unlock status.
+func (s *Status) Unlock() error {
+	if err := s.red.Off(); err != nil {
+		return err
+	}
+
+	if err := s.green.Blink(2*time.Second, 500*time.Millisecond); err != nil {
+		return err
+	}
+
+	s.Waiting() // Set the status to waiting after unlocking
+
+	return nil
+}
+
+// Lock turns on the red LED and turns off the green LED to indicate a lock status.
+func (s *Status) Lock() error {
+	if err := s.red.Blink(2*time.Second, 500*time.Millisecond); err != nil {
+		return err
+	}
+
+	s.Waiting() // Set the status to waiting before locking
+
+	return nil
+}
