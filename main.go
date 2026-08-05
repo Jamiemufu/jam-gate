@@ -2,59 +2,86 @@ package main
 
 import (
 	"fmt"
+	"jam-gate/internal/access"
+	"jam-gate/internal/hardware"
 	hw "jam-gate/internal/hardware"
 	"log"
 	"time"
 )
 
 func main() {
-	devices, err := hw.Init()
+	d, err := hw.Init()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := devices.StatusLight.Waiting(); err != nil {
+	if err := d.StatusLight.Waiting(); err != nil {
 		log.Fatal(err)
 	}
 
+	pinControl := access.New("0000")
+
 	for {
 		// Read the key from the keypad
-		key, err := devices.Keypad.ReadKey()
+		key, err := d.Keypad.ReadKey()
 		if err != nil {
 			log.Fatal(err)
 		}
 		// Print the key if it is not empty
 		if key != "" {
 			switch key {
-			case "A":
-				fmt.Println("Unlocking the gate")
-				if err := devices.StatusLight.Unlock(); err != nil {
+			case "*":
+				fmt.Println("Resetting input")
+				pinControl.Reset()
+				if err := d.StatusLight.Lock(); err != nil {
 					log.Fatal(err)
 				}
-			case "D":
+			case "#":
 				fmt.Println("Locking the gate")
-				if err := devices.StatusLight.Lock(); err != nil {
+				if err := d.StatusLight.Lock(); err != nil {
 					log.Fatal(err)
 				}
+				pinControl.Reset()
 			default:
-				if err := devices.StatusLight.KeyPress(); err != nil {
+				// Pass the key to the pin controller
+				result := pinControl.PinController(key)
+				// Handle the result of the pin controller
+				if err := handleAccessResult(result, d); err != nil {
 					log.Fatal(err)
 				}
-				fmt.Println(key)
+
 			}
 		}
 		// Check if the button has been inactive for 5 minutes
-		if devices.Button.InactiveFor(5 * time.Minute) {
-			if err := devices.StatusLight.Sleep(); err != nil {
+		if d.Button.InactiveFor(5 * time.Minute) {
+			if err := d.StatusLight.Sleep(); err != nil {
 				log.Fatal(err)
 			}
 		}
 		// Check if the button has been pressed
-		if devices.Button.Pressed() {
-			if err := devices.StatusLight.Start(); err != nil {
+		if d.Button.Pressed() {
+			if err := d.StatusLight.Start(); err != nil {
 				log.Fatal(err)
 			}
 		}
 		time.Sleep(20 * time.Millisecond)
+	}
+}
+
+// handleAccessResult handles the result of the access control and updates the hardware accordingly.
+func handleAccessResult(result access.Result,
+	devices *hardware.Hardware) error {
+	switch result {
+	case access.Granted:
+		fmt.Println("Access granted")
+		return devices.StatusLight.Unlock()
+	case access.Denied:
+		fmt.Println("Access denied")
+		return devices.StatusLight.Lock()
+	case access.Pending:
+		return devices.StatusLight.KeyPress()
+	default:
+		fmt.Println("Unknown access result")
+		return devices.StatusLight.Error()
 	}
 }
