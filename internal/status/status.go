@@ -29,27 +29,6 @@ func (s *Status) Stop() error {
 	return nil
 }
 
-// Start turns off the red LED and turns on the green LED, indicating a started status.
-func (s *Status) Start() error {
-
-	end := 10 * time.Second
-	interval := 500 * time.Millisecond
-
-	if err := s.red.Off(); err != nil {
-		return err
-	}
-
-	if err := s.green.Blink(end, interval); err != nil {
-		return err
-	}
-
-	if err := s.Waiting(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // Off turns on the red LED and turns off the green LED, indicating an off status.
 func (s *Status) Off() error {
 	if err := s.red.On(); err != nil {
@@ -106,8 +85,16 @@ func (s *Status) KeyPress() error {
 		return err
 	}
 	time.Sleep(50 * time.Millisecond)
-	s.red.Toggle()
-	return nil
+	return s.red.Toggle()
+}
+
+// AccessDenied indicates that an entered PIN was rejected.
+func (s *Status) AccessDenied() error {
+	if err := s.red.Blink(2*time.Second, 500*time.Millisecond); err != nil {
+		return err
+	}
+
+	return s.Waiting()
 }
 
 // Unlock turns off the red LED and blinks the green LED to indicate an unlock status.
@@ -120,18 +107,10 @@ func (s *Status) Unlock() error {
 		return err
 	}
 
-	s.Waiting() // Set the status to waiting after unlocking
-
-	return nil
+	return s.Waiting()
 }
 
 // Lock turns on the red LED and turns off the green LED to indicate a lock status.
 func (s *Status) Lock() error {
-	if err := s.red.Blink(2*time.Second, 500*time.Millisecond); err != nil {
-		return err
-	}
-
-	s.Waiting() // Set the status to waiting before locking
-
-	return nil
+	return s.AccessDenied()
 }

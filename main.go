@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"jam-gate/internal/access"
 	"jam-gate/internal/hardware"
-	hw "jam-gate/internal/hardware"
 	"log"
 	"time"
 )
 
 func main() {
-	d, err := hw.Init()
+	d, err := hardware.Init()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,15 +32,9 @@ func main() {
 			case "*":
 				fmt.Println("Resetting input")
 				pinControl.Reset()
-				if err := d.StatusLight.Lock(); err != nil {
+				if err := d.StatusLight.KeyPress(); err != nil {
 					log.Fatal(err)
 				}
-			case "#":
-				fmt.Println("Locking the gate")
-				if err := d.StatusLight.Lock(); err != nil {
-					log.Fatal(err)
-				}
-				pinControl.Reset()
 			default:
 				// Pass the key to the pin controller
 				result := pinControl.PinController(key)
@@ -60,7 +53,7 @@ func main() {
 		}
 		// Check if the button has been pressed
 		if d.Button.Pressed() {
-			if err := d.StatusLight.Start(); err != nil {
+			if err := d.Gate.Open(); err != nil {
 				log.Fatal(err)
 			}
 		}
@@ -74,10 +67,10 @@ func handleAccessResult(result access.Result,
 	switch result {
 	case access.Granted:
 		fmt.Println("Access granted")
-		return devices.StatusLight.Unlock()
+		return devices.Gate.Open()
 	case access.Denied:
 		fmt.Println("Access denied")
-		return devices.StatusLight.Lock()
+		return devices.StatusLight.AccessDenied()
 	case access.Pending:
 		return devices.StatusLight.KeyPress()
 	default:

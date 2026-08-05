@@ -2,6 +2,7 @@ package hardware
 
 import (
 	"jam-gate/internal/button"
+	"jam-gate/internal/gate"
 	"jam-gate/internal/keypad"
 	"jam-gate/internal/led"
 	"jam-gate/internal/status"
@@ -14,6 +15,7 @@ import (
 type Hardware struct {
 	Button      *button.Button
 	Keypad      *keypad.Keypad
+	Gate        *gate.Gate
 	StatusLight *status.Status
 }
 
@@ -56,9 +58,12 @@ func Init() (*Hardware, error) {
 		return nil, err
 	}
 
+	statusLight := status.New(redLED, greenLED)
+
 	return &Hardware{
 		Button:      btn,
 		Keypad:      pad,
-		StatusLight: status.New(redLED, greenLED),
+		Gate:        gate.NewSimulator(statusLight),
+		StatusLight: statusLight,
 	}, nil
 }
