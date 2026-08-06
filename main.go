@@ -31,10 +31,16 @@ func main() {
 			switch key {
 			case "*":
 				fmt.Println("Resetting input")
+				if err := d.OLED.Show("Resetting input"); err != nil {
+					log.Fatal(err)
+				}
 				pinControl.Reset()
 				if err := d.StatusLight.KeyPress(); err != nil {
 					log.Fatal(err)
 				}
+				d.OLED.Show("Resetting input")
+				time.Sleep(1 * time.Second)
+				d.OLED.Show("Enter PIN")
 			default:
 				// Pass the key to the pin controller
 				result := pinControl.PinController(key)
@@ -43,18 +49,6 @@ func main() {
 					log.Fatal(err)
 				}
 
-			}
-		}
-		// Check if the button has been inactive for 5 minutes
-		if d.Button.InactiveFor(5 * time.Minute) {
-			if err := d.StatusLight.Sleep(); err != nil {
-				log.Fatal(err)
-			}
-		}
-		// Check if the button has been pressed
-		if d.Button.Pressed() {
-			if err := d.Gate.Open(); err != nil {
-				log.Fatal(err)
 			}
 		}
 		time.Sleep(20 * time.Millisecond)

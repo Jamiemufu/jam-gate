@@ -4,6 +4,9 @@ jam-gate
 # Go coverage
 *.out
 
+# Air
+tmp
+
 # IDE
 .vscode/
 .idea/

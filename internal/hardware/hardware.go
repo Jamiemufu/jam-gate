@@ -1,7 +1,7 @@
 package hardware
 
 import (
-	"jam-gate/internal/button"
+	"jam-gate/internal/display"
 	"jam-gate/internal/gate"
 	"jam-gate/internal/keypad"
 	"jam-gate/internal/led"
@@ -13,10 +13,10 @@ import (
 )
 
 type Hardware struct {
-	Button      *button.Button
 	Keypad      *keypad.Keypad
 	Gate        *gate.Gate
 	StatusLight *status.Status
+	OLED        *display.Display
 }
 
 func Init() (*Hardware, error) {
@@ -24,17 +24,12 @@ func Init() (*Hardware, error) {
 		return nil, err
 	}
 
-	redLED, err := led.New("GPIO2")
+	redLED, err := led.New("GPIO27")
 	if err != nil {
 		return nil, err
 	}
 
-	greenLED, err := led.New("GPIO3")
-	if err != nil {
-		return nil, err
-	}
-
-	btn, err := button.New("GPIO4")
+	greenLED, err := led.New("GPIO17")
 	if err != nil {
 		return nil, err
 	}
@@ -60,10 +55,17 @@ func Init() (*Hardware, error) {
 
 	statusLight := status.New(redLED, greenLED)
 
+	display, err := display.New()
+	if err != nil {
+		return nil, err
+	}
+
+	display.Show("Ready...")
+
 	return &Hardware{
-		Button:      btn,
 		Keypad:      pad,
 		Gate:        gate.NewSimulator(statusLight),
 		StatusLight: statusLight,
+		OLED:        display,
 	}, nil
 }
